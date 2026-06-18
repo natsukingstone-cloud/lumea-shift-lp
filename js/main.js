@@ -12,7 +12,7 @@
 // =========================================
 // 【重要】GASのエンドポイントURLをここに貼る
 // =========================================
-const GAS_ENDPOINT = 'https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec';
+const GAS_ENDPOINT = 'https://script.google.com/macros/s/AKfycby-FL9PPqCJUvP1ebatVjhTs4ee7woaKX19aYUls0kqJWhbMOEic3RfFf1nBKtui4Drvg/exec';
 // ↑ GASデプロイ後に発行される URL に置き換えてください
 
 // =========================================
@@ -75,9 +75,12 @@ function validateForm() {
   required.forEach(field => {
     field.classList.remove('error');
     if (field.type === 'checkbox') {
+      const group = field.closest('.form-group');
       if (!field.checked) {
-        field.closest('.form-group').style.outline = '2px solid #e74c3c';
+        if (group) group.style.outline = '2px solid #e74c3c';
         valid = false;
+      } else {
+        if (group) group.style.outline = 'none';
       }
     } else if (!field.value.trim()) {
       field.classList.add('error');
@@ -221,5 +224,87 @@ if (zipBtn && zipField && addressField) {
       zipBtn.disabled = false;
       if (zipBtn.textContent === '検索中…') zipBtn.textContent = '住所を自動入力';
     }
+  });
+}
+
+// =========================================
+// 7. ヒーロー動画スライダー
+// =========================================
+const heroSlider = document.getElementById('heroSlider');
+if (heroSlider) {
+  const slides = Array.from(heroSlider.querySelectorAll('.hero-slide'));
+  const dots = Array.from(document.querySelectorAll('#heroSliderDots .dot'));
+  const prevBtn = document.getElementById('heroPrev');
+  const nextBtn = document.getElementById('heroNext');
+  let current = 0;
+  let autoTimer = null;
+
+  function goToSlide(index) {
+    const newIndex = (index + slides.length) % slides.length;
+
+    slides.forEach((slide, i) => {
+      const video = slide.querySelector('video');
+      if (i === newIndex) {
+        slide.classList.add('is-active');
+        if (video) {
+          video.currentTime = 0;
+          video.play().catch(() => {});
+        }
+      } else {
+        slide.classList.remove('is-active');
+        if (video) video.pause();
+      }
+    });
+
+    dots.forEach((dot, i) => dot.classList.toggle('is-active', i === newIndex));
+    current = newIndex;
+  }
+
+  function resetAutoTimer() {
+    if (autoTimer) clearInterval(autoTimer);
+    autoTimer = setInterval(() => goToSlide(current + 1), 5000);
+  }
+
+  dots.forEach((dot, i) => {
+    dot.addEventListener('click', () => { goToSlide(i); resetAutoTimer(); });
+  });
+  prevBtn?.addEventListener('click', () => { goToSlide(current - 1); resetAutoTimer(); });
+  nextBtn?.addEventListener('click', () => { goToSlide(current + 1); resetAutoTimer(); });
+
+  // スワイプ対応
+  let touchStartX = 0;
+  heroSlider.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; }, { passive: true });
+  heroSlider.addEventListener('touchend', (e) => {
+    const diff = e.changedTouches[0].clientX - touchStartX;
+    if (Math.abs(diff) > 40) {
+      diff > 0 ? goToSlide(current - 1) : goToSlide(current + 1);
+      resetAutoTimer();
+    }
+  }, { passive: true });
+
+  resetAutoTimer();
+}
+
+// =========================================
+// 8. 全成分表トグル
+// =========================================
+const ingrToggle = document.getElementById('ingrTableToggle');
+const ingrWrap = document.getElementById('ingrTableWrap');
+if (ingrToggle && ingrWrap) {
+  ingrToggle.addEventListener('click', () => {
+    const isOpen = ingrWrap.classList.toggle('open');
+    ingrToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    ingrToggle.firstChild.textContent = isOpen ? '全成分表をとじる ' : '全成分表をみる ';
+  });
+}
+
+// =========================================
+// 9. 同意チェックボックス：チェック時に即赤枠を解除
+// =========================================
+const agreeCheckbox = document.getElementById('agree');
+if (agreeCheckbox) {
+  agreeCheckbox.addEventListener('change', () => {
+    const group = agreeCheckbox.closest('.form-group');
+    if (group) group.style.outline = agreeCheckbox.checked ? 'none' : '';
   });
 }

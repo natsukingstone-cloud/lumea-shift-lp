@@ -46,19 +46,55 @@
       <p class="hero-sub">22時帰宅でも「ちゃんとした感」が出る1本。</p>
 
       <!--
-        【前面・商品動画】ここに商品動画を配置
-        推奨: LS_video_08_pump_and_apply.mp4（ポンプ＆塗布）
-              LS_video_01_pump_drip.mp4（ポンプ・液垂れ）
-              LS_video_04_bottle_rotate.mp4（ボトル回転）
+        【前面・商品動画スライダー】
+        動画を複数本入れて左右にスライドできるようにする。
+        現在: LS_video_08_pump_and_apply.mp4 のみ確定。
+        あと2本を images/04_video/ に追加し、下記 <video> を複製してsrcを変更するだけでOK。
+        推奨追加候補:
+          ・LS_video_01_pump_drip.mp4（ポンプ・液垂れ）
+          ・LS_video_04_bottle_rotate.mp4（ボトル回転）
+          ・LUMEA_SHIFT_lp_top_v1.mp4（既存のLPトップ用動画）
       -->
       <div class="hero-video-wrap">
-        <video
-          class="hero-video"
-          src="images/04_video/LS_video_08_pump_and_apply.mp4"
-          autoplay muted loop playsinline
-          poster="images/02_product/LS_prod_01_topdown_beige.jpg"
-        ></video>
+        <div class="hero-slider" id="heroSlider">
+          <div class="hero-slide is-active">
+            <video
+              class="hero-video"
+              src="images/04_video/LS_video_08_pump_and_apply.mp4"
+              autoplay muted loop playsinline
+              poster="images/02_product/LS_prod_01_topdown_beige.jpg"
+            ></video>
+          </div>
+          <div class="hero-slide">
+            <video
+              class="hero-video"
+              src="images/04_video/LS_video_01_pump_drip.mp4"
+              muted loop playsinline
+              poster="images/02_product/LS_prod_01_topdown_beige.jpg"
+            ></video>
+          </div>
+          <div class="hero-slide">
+            <video
+              class="hero-video"
+              src="images/04_video/LS_video_04_bottle_rotate.mp4"
+              muted loop playsinline
+              poster="images/02_product/LS_prod_02_angle45_marble.jpg"
+            ></video>
+          </div>
+        </div>
+
         <div class="video-badge">✦ 3秒で完了</div>
+
+        <!-- スライドドット -->
+        <div class="hero-slider-dots" id="heroSliderDots">
+          <button class="dot is-active" data-slide="0" aria-label="動画1"></button>
+          <button class="dot" data-slide="1" aria-label="動画2"></button>
+          <button class="dot" data-slide="2" aria-label="動画3"></button>
+        </div>
+
+        <!-- 矢印（PC用） -->
+        <button class="hero-slider-arrow hero-slider-arrow--prev" id="heroPrev" aria-label="前の動画">‹</button>
+        <button class="hero-slider-arrow hero-slider-arrow--next" id="heroNext" aria-label="次の動画">›</button>
       </div>
 
       <div class="hero-cta-wrap">
@@ -214,28 +250,36 @@
       <!-- 成分を生活メリットに翻訳して表示 -->
       <div class="benefit-list">
         <div class="benefit-item">
-          <div class="benefit-icon">💧</div>
+          <div class="benefit-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2.5c-3.5 5-6 8.8-6 12a6 6 0 0 0 12 0c0-3.2-2.5-7-6-12z"/></svg>
+          </div>
           <div class="benefit-body">
             <p class="benefit-title">朝起きたとき、肌がもちっとしてる</p>
             <p class="benefit-sub">ヒアルロン酸Na＋加水分解コラーゲンが夜中もうるおいをキープ</p>
           </div>
         </div>
         <div class="benefit-item">
-          <div class="benefit-icon">🛡️</div>
+          <div class="benefit-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2l8 3v6c0 5-3.5 8.5-8 11-4.5-2.5-8-6-8-11V5l8-3z"/></svg>
+          </div>
           <div class="benefit-body">
             <p class="benefit-title">乾燥・ざらつきが気にならなくなる</p>
             <p class="benefit-sub">セラミドNPが肌のバリアをサポート。外からの刺激に強くなる</p>
           </div>
         </div>
         <div class="benefit-item">
-          <div class="benefit-icon">✨</div>
+          <div class="benefit-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 3v3M12 18v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M3 12h3M18 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/><circle cx="12" cy="12" r="3"/></svg>
+          </div>
           <div class="benefit-body">
             <p class="benefit-title">「なんか今日肌いいね」と言われる</p>
             <p class="benefit-sub">ナイアシンアミドが肌のトーンを整え、くすみにくい印象に</p>
           </div>
         </div>
         <div class="benefit-item">
-          <div class="benefit-icon">🪶</div>
+          <div class="benefit-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 5c-7 0-13 5-15 14 8-1 13-6 15-14z"/><path d="M9 15l-2 4"/></svg>
+          </div>
           <div class="benefit-body">
             <p class="benefit-title">ベタつかない。朝も夜も使える</p>
             <p class="benefit-sub">スクワランの軽いテクスチャで、塗った瞬間スッとなじむ</p>
@@ -243,6 +287,33 @@
         </div>
       </div>
       <p class="ingr-note">成分名が気になる方へ → ナイアシンアミド・セラミドNP・ヒアルロン酸Na・加水分解コラーゲン・スクワランほか配合</p>
+
+      <!-- 全成分表（薙機法対応） -->
+      <button type="button" class="ingr-table-toggle" id="ingrTableToggle" aria-expanded="false">
+        全成分表をみる
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </button>
+      <div class="ingr-table-wrap" id="ingrTableWrap">
+        <table class="ingr-table">
+          <thead>
+            <tr><th>成分名</th><th>分類</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>水</td><td>基剤</td></tr>
+            <tr><td>グリセリン</td><td>保湿</td></tr>
+            <tr><td>BG</td><td>保湿</td></tr>
+            <tr><td>ヒアルロン酸Na</td><td>保湿</td></tr>
+            <tr><td>加水分解コラーゲン</td><td>保湿</td></tr>
+            <tr><td>セラミドNP</td><td>保湿・バリアサポート</td></tr>
+            <tr><td>ナイアシンアミド</td><td>整肌</td></tr>
+            <tr><td>アラントイン</td><td>整肌</td></tr>
+            <tr><td>カミツレ花エキス</td><td>整肌</td></tr>
+            <tr><td>PCA-Na</td><td>保湿</td></tr>
+            <tr><td>スクワラン</td><td>エモリエント</td></tr>
+            <tr><td>フェノキシエタノール</td><td>防腐</td></tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </section>
 
@@ -255,25 +326,58 @@
 
       <div class="voice-grid">
         <div class="voice-card voice-card--featured">
-          <img src="images/01_char/LS_char_05_ok_sign.png" alt="" class="voice-avatar" loading="lazy">
+          <div class="voice-avatar voice-avatar--illust">
+            <svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="40" cy="40" r="40" fill="#EAE3D9"/>
+              <circle cx="40" cy="32" r="14" fill="#9C8A72"/>
+              <path d="M14 72c0-16 11.6-26 26-26s26 10 26 26" fill="#9C8A72"/>
+            </svg>
+          </div>
           <div class="voice-stars">★★★★★</div>
           <p class="voice-q">「"やらなきゃ"と思うほど続かなくて…。1本でいいって割り切れるから、むしろ続いてます」</p>
           <p class="voice-by">28歳・会社員</p>
         </div>
         <div class="voice-card">
-          <div class="voice-stars">★★★★★</div>
-          <p class="voice-q">「帰宅が遅い日は本当に助かってます。これだけやればOKって思えるのがラクです」</p>
-          <p class="voice-by">26歳・事務職</p>
+          <div class="voice-avatar voice-avatar--illust voice-avatar--sm">
+            <svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="40" cy="40" r="40" fill="#F0EAE0"/>
+              <circle cx="40" cy="32" r="14" fill="#B8A88E"/>
+              <path d="M14 72c0-16 11.6-26 26-26s26 10 26 26" fill="#B8A88E"/>
+            </svg>
+          </div>
+          <div class="voice-card-body">
+            <div class="voice-stars">★★★★★</div>
+            <p class="voice-q">「帰宅が遅い日は本当に助かってます。これだけやればOKって思えるのがラクです」</p>
+            <p class="voice-by">26歳・事務職</p>
+          </div>
         </div>
         <div class="voice-card">
-          <div class="voice-stars">★★★★★</div>
-          <p class="voice-q">「劇的に変わるというより、"ちゃんとしてる感"が出る感じ。仕事前の安心感が違います」</p>
-          <p class="voice-by">35歳・IT系</p>
+          <div class="voice-avatar voice-avatar--illust voice-avatar--sm">
+            <svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="40" cy="40" r="40" fill="#E5DDD0"/>
+              <circle cx="40" cy="32" r="14" fill="#A6926F"/>
+              <path d="M14 72c0-16 11.6-26 26-26s26 10 26 26" fill="#A6926F"/>
+            </svg>
+          </div>
+          <div class="voice-card-body">
+            <div class="voice-stars">★★★★★</div>
+            <p class="voice-q">「劇的に変わるというより、"ちゃんとしてる感"が出る感じ。仕事前の安心感が違います」</p>
+            <p class="voice-by">35歳・IT系</p>
+          </div>
         </div>
         <div class="voice-card">
-          <div class="voice-stars">★★★★☆</div>
-          <p class="voice-q">「ベタつくのが苦手なんですが、これは軽くて朝にサッと使えて助かります」</p>
-          <p class="voice-by">32歳・営業職</p>
+          <div class="voice-avatar voice-avatar--illust voice-avatar--sm">
+            <svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="40" cy="40" r="40" fill="#EFE7DA"/>
+              <circle cx="40" cy="32" r="14" fill="#C2AF92"/>
+              <path d="M14 72c0-16 11.6-26 26-26s26 10 26 26" fill="#C2AF92"/>
+            </svg>
+          </div>
+          <div class="voice-card-body">
+            <div class="voice-stars">★★★★☆</div>
+            <p class="voice-q">「ベタつくのが苦手なんですが、これは軽くて朝にサッと使えて助かります」</p>
+            <p class="voice-by">32歳・営業職</p>
+          </div>
         </div>
       </div>
     </div>
