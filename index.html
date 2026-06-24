@@ -9,6 +9,100 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@200;300;400&family=Noto+Sans+JP:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
+
+  <!-- ===== favicon ===== -->
+  <!-- 画像ファイルが images/favicon.png に存在することを確認してください。ファイル名/パスが違う場合はここを修正 -->
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon.png">
+  <link rel="apple-touch-icon" href="favicon.png">
+
+  <!-- ===== canonical ===== -->
+  <!-- 実際に公開するURLに置き換えてください -->
+  <link rel="canonical" href="https://lumea-shift.example.com/">
+
+  <!-- ===== OGP / Twitter Card ===== -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="LUMEA SHIFT | 忙しくても、整える。">
+  <meta property="og:description" content="朝夜兼用オールインワン美容液。1本で完結、ベタつきにくい、男女兼用。初回1,980円・回数縛りなし。">
+  <meta property="og:url" content="https://lumea-shift.example.com/">
+  <meta property="og:site_name" content="LUMEA SHIFT">
+  <meta property="og:image" content="https://lumea-shift.example.com/images/02_product/LS_prod_01_topdown_beige.jpg">
+  <meta property="og:locale" content="ja_JP">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="LUMEA SHIFT | 忙しくても、整える。">
+  <meta name="twitter:description" content="朝夜兼用オールインワン美容液。1本で完結、ベタつきにくい、男女兼用。初回1,980円・回数縛りなし。">
+  <meta name="twitter:image" content="https://lumea-shift.example.com/images/02_product/LS_prod_01_topdown_beige.jpg">
+
+  <!-- ===== ボタンタップ時のフィードバック（:active） ===== -->
+  <style>
+    .nav-cta, .btn-primary, .btn-submit, .btn-zip, .ingr-table-toggle,
+    .hero-slider-arrow, .dot, .faq-q {
+      -webkit-tap-highlight-color: transparent;
+      transition: transform 0.15s ease, filter 0.15s ease, opacity 0.15s ease;
+    }
+    .nav-cta:active, .btn-primary:active, .btn-submit:active, .btn-zip:active {
+      transform: scale(0.96);
+      filter: brightness(0.9);
+    }
+    .ingr-table-toggle:active, .faq-q:active {
+      opacity: 0.6;
+    }
+    .hero-slider-arrow:active {
+      transform: scale(0.85);
+    }
+    .dot:active {
+      transform: scale(1.3);
+    }
+    /* スライドごとのキャッチコピー（動画に重ねる） */
+    .hero-slider {
+      position: relative;
+    }
+    .hero-slide-catch {
+      position: absolute;
+      left: 50%;
+      bottom: 19%;
+      transform: translateX(-50%);
+      z-index: 5;
+      margin: 0;
+      width: max-content;
+      max-width: 86%;
+      text-align: center;
+      color: #fff;
+      /* Cormorant Garamondは数字「1」が崩れるため日本語用フォントのみ使用 */
+      font-family: 'Noto Serif JP', serif;
+      font-weight: 600;
+      font-size: clamp(22px, 6.5vw, 32px);
+      line-height: 1.5;
+      letter-spacing: 0.03em;
+      padding: 8px 6px;
+      text-shadow:
+        0 2px 16px rgba(0,0,0,0.85),
+        0 1px 4px rgba(0,0,0,0.95),
+        0 0 30px rgba(0,0,0,0.5);
+      transition: opacity 0.35s ease;
+      pointer-events: none;
+    }
+    .hero-slide-catch.is-fading {
+      opacity: 0;
+    }
+    /* 「3秒で完了」バッジ：ガラス風＋ゴールド縁取りで存在感を出す */
+    .hero-video-wrap .video-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(20, 16, 10, 0.45);
+      border: 1px solid rgba(217, 198, 160, 0.7);
+      color: #F3ECDD;
+      font-family: 'Noto Serif JP', serif;
+      font-size: clamp(13px, 3.2vw, 15px);
+      font-weight: 500;
+      letter-spacing: 0.05em;
+      padding: 9px 20px;
+      border-radius: 999px;
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      box-shadow: 0 4px 18px rgba(0,0,0,0.35);
+    }
+  </style>
 </head>
 <body>
 
@@ -57,7 +151,7 @@
       -->
       <div class="hero-video-wrap">
         <div class="hero-slider" id="heroSlider">
-          <div class="hero-slide is-active">
+          <div class="hero-slide is-active" data-catch="え、これ1本で<br>よかったの">
             <video
               class="hero-video"
               src="images/04_video/LS_video_08_pump_and_apply.mp4"
@@ -65,7 +159,7 @@
               poster="images/02_product/LS_prod_01_topdown_beige.jpg"
             ></video>
           </div>
-          <div class="hero-slide">
+          <div class="hero-slide" data-catch="もう、何本も<br>並べなくていい">
             <video
               class="hero-video"
               src="images/04_video/LS_video_01_pump_drip.mp4"
@@ -73,7 +167,7 @@
               poster="images/02_product/LS_prod_01_topdown_beige.jpg"
             ></video>
           </div>
-          <div class="hero-slide">
+          <div class="hero-slide" data-catch="22時帰宅でも、<br>ちゃんと整う">
             <video
               class="hero-video"
               src="images/04_video/LS_video_04_bottle_rotate.mp4"
@@ -83,7 +177,10 @@
           </div>
         </div>
 
-        <div class="video-badge">✦ 3秒で完了</div>
+        <!-- スライドごとに切り替わるキャッチコピー（動画に被せる） -->
+        <p class="hero-slide-catch" id="heroSlideCatch">え、これ1本で<br>よかったの</p>
+
+        <div class="video-badge"><span style="color:#D9C6A0;">✦</span> 3秒で完了</div>
 
         <!-- スライドドット -->
         <div class="hero-slider-dots" id="heroSliderDots">
@@ -568,5 +665,34 @@
   </footer>
 
   <script src="js/main.js"></script>
+  <script>
+    // ヒーロー動画スライドの切り替えに合わせてキャッチコピーを変更
+    // main.js が .hero-slide に "is-active" クラスを付け替える仕組みに依存しているため、
+    // main.js自体は編集せず、クラス変化をMutationObserverで監視して同期させています。
+    (function () {
+      const slider = document.getElementById('heroSlider');
+      const catchEl = document.getElementById('heroSlideCatch');
+      if (!slider || !catchEl) return;
+
+      function updateCatch() {
+        const active = slider.querySelector('.hero-slide.is-active') || slider.querySelector('.hero-slide');
+        if (!active) return;
+        const newHTML = active.getAttribute('data-catch') || '';
+        if (catchEl.innerHTML === newHTML) return;
+        catchEl.classList.add('is-fading');
+        setTimeout(() => {
+          catchEl.innerHTML = newHTML;
+          catchEl.classList.remove('is-fading');
+        }, 200);
+      }
+
+      const observer = new MutationObserver(updateCatch);
+      slider.querySelectorAll('.hero-slide').forEach((slide) => {
+        observer.observe(slide, { attributes: true, attributeFilter: ['class'] });
+      });
+
+      updateCatch();
+    })();
+  </script>
 </body>
 </html>
