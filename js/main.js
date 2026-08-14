@@ -308,3 +308,115 @@ if (agreeCheckbox) {
     if (group) group.style.outline = agreeCheckbox.checked ? 'none' : '';
   });
 }
+
+// =========================================
+// 10. チャットウィジェット（課題 段階1: UI実装）
+//
+//   ここではUI（開閉アニメーション・吹き出し表示）のみを実装しています。
+//   getBotReply() は現時点ではダミー応答を返すスタブです。
+//   ・段階2: Google SheetsのCSVをfetchし、キーワード一致で回答を返すロジックに置き換える
+//   ・段階3: Railway上のバックエンド（/chat 等）にfetchし、LLM APIの回答を返すように置き換える
+//   呼び出し側（chatInputFormのsubmitハンドラ）は変更不要な設計にしてあります。
+// =========================================
+const chatToggleBtn = document.getElementById('chatToggleBtn');
+const chatWindow = document.getElementById('chatWindow');
+const chatCloseBtn = document.getElementById('chatCloseBtn');
+const chatMessages = document.getElementById('chatMessages');
+const chatInputForm = document.getElementById('chatInputForm');
+const chatInput = document.getElementById('chatInput');
+const chatSendBtn = document.getElementById('chatSendBtn');
+
+if (chatToggleBtn && chatWindow && chatInputForm && chatInput && chatMessages) {
+
+  // ----- 開閉制御 -----
+  function openChat() {
+    chatWindow.classList.add('is-open');
+    chatWindow.setAttribute('aria-hidden', 'false');
+    chatToggleBtn.classList.add('is-open');
+    chatToggleBtn.setAttribute('aria-expanded', 'true');
+    chatToggleBtn.setAttribute('aria-label', 'チャットを閉じる');
+    // 開いたあとに入力欄へフォーカス（アニメーション終了を待つ）
+    setTimeout(() => chatInput.focus(), 320);
+  }
+
+  function closeChat() {
+    chatWindow.classList.remove('is-open');
+    chatWindow.setAttribute('aria-hidden', 'true');
+    chatToggleBtn.classList.remove('is-open');
+    chatToggleBtn.setAttribute('aria-expanded', 'false');
+    chatToggleBtn.setAttribute('aria-label', 'チャットを開く');
+  }
+
+  chatToggleBtn.addEventListener('click', () => {
+    if (chatWindow.classList.contains('is-open')) {
+      closeChat();
+    } else {
+      openChat();
+    }
+  });
+
+  chatCloseBtn?.addEventListener('click', closeChat);
+
+  // Escキーで閉じる
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && chatWindow.classList.contains('is-open')) {
+      closeChat();
+    }
+  });
+
+  // ----- 吹き出し描画 -----
+  function appendMessage(text, sender) {
+    const msg = document.createElement('div');
+    msg.className = `chat-msg chat-msg--${sender}`;
+    msg.textContent = text;
+    chatMessages.appendChild(msg);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+    return msg;
+  }
+
+  function showTypingIndicator() {
+    const typing = document.createElement('div');
+    typing.className = 'chat-msg chat-msg--bot chat-msg--typing';
+    typing.innerHTML = '<span></span><span></span><span></span>';
+    chatMessages.appendChild(typing);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+    return typing;
+  }
+
+  // ----- 回答ロジック（段階2・3で差し替え予定のスタブ） -----
+  async function getBotReply(userText) {
+    // TODO(段階2): Google SheetsのCSVをfetch → キーワード一致でanswerを返す
+    // TODO(段階3): Railwayバックエンド(/chat)にuserTextとsystemPromptをPOSTし、
+    //              LLMの回答を返す（APIキーはフロントに置かない）
+    await new Promise((resolve) => setTimeout(resolve, 550));
+    return 'ご質問ありがとうございます。現在は画面表示の確認段階のため、回答ロジックは準備中です。今後、料金・営業時間・お問い合わせ方法などにお答えできるようになります。';
+  }
+
+  // ----- 送信処理 -----
+  chatInputForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const text = chatInput.value.trim();
+    if (!text) return;
+
+    appendMessage(text, 'user');
+    chatInput.value = '';
+    chatInput.disabled = true;
+    if (chatSendBtn) chatSendBtn.disabled = true;
+
+    const typingEl = showTypingIndicator();
+
+    try {
+      const reply = await getBotReply(text);
+      typingEl.remove();
+      appendMessage(reply, 'bot');
+    } catch (err) {
+      typingEl.remove();
+      appendMessage('エラーが発生しました。時間をおいて再度お試しください。', 'bot');
+      console.error('チャット応答エラー:', err);
+    } finally {
+      chatInput.disabled = false;
+      if (chatSendBtn) chatSendBtn.disabled = false;
+      chatInput.focus();
+    }
+  });
+}
