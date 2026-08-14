@@ -398,7 +398,10 @@ if (chatToggleBtn && chatWindow && chatInputForm && chatInput && chatMessages) {
     if (knowledgeRows) return Promise.resolve(knowledgeRows);
     if (knowledgeLoadPromise) return knowledgeLoadPromise;
 
-    knowledgeLoadPromise = fetch(SHEET_CSV_URL)
+    // キャッシュ対策: 末尾にタイムスタンプを付けて、毎回必ず最新のCSVを取得する
+    const cacheBustedUrl = `${SHEET_CSV_URL}&_ts=${Date.now()}`;
+
+    knowledgeLoadPromise = fetch(cacheBustedUrl, { cache: 'no-store' })
       .then((res) => {
         if (!res.ok) throw new Error(`Sheet fetch failed: ${res.status}`);
         return res.text();
