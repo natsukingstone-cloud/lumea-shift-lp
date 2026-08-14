@@ -310,14 +310,19 @@ if (agreeCheckbox) {
 }
 
 // =========================================
-// 10. チャットウィジェット（課題 段階1: UI実装）
+// 10. チャットウィジェット（課題 段階2: Google Sheets連携）
 //
-//   ここではUI（開閉アニメーション・吹き出し表示）のみを実装しています。
-//   getBotReply() は現時点ではダミー応答を返すスタブです。
-//   ・段階2: Google SheetsのCSVをfetchし、キーワード一致で回答を返すロジックに置き換える
-//   ・段階3: Railway上のバックエンド（/chat 等）にfetchし、LLM APIの回答を返すように置き換える
-//   呼び出し側（chatInputFormのsubmitハンドラ）は変更不要な設計にしてあります。
+//   Google Sheets（keyword, answer の2列）をCSVとしてfetchし、
+//   PapaParseでパースしたうえで、ユーザーの入力文字列とkeywordを
+//   part-match（部分一致）させて対応するanswerを返す、ルールベースのロジックです。
+//   LLM APIへの接続はまだ行いません（段階3でgetBotReply()の中身を
+//   Railwayバックエンドへのfetchに差し替える予定）。
 // =========================================
+
+// Google Sheets「LUMEA SHIFT チャットボット用ナレッジ（段階2）」を
+// ウェブに公開(CSV形式)して発行されたURL
+const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT8FO6c0QFvcFODhSEMpSK2d6b5C7pnalTcphpz4szc3y4K94v5bJ7WQK0CMgDAYh6ab93rscR6uAe_/pub?output=csv';
+
 const chatToggleBtn = document.getElementById('chatToggleBtn');
 const chatWindow = document.getElementById('chatWindow');
 const chatCloseBtn = document.getElementById('chatCloseBtn');
@@ -337,6 +342,8 @@ if (chatToggleBtn && chatWindow && chatInputForm && chatInput && chatMessages) {
     chatToggleBtn.setAttribute('aria-label', 'チャットを閉じる');
     // 開いたあとに入力欄へフォーカス（アニメーション終了を待つ）
     setTimeout(() => chatInput.focus(), 320);
+    // Google Sheetsのナレッジを先読みしておく（初回の回答を速くするため）
+    loadKnowledge();
   }
 
   function closeChat() {
@@ -383,13 +390,58 @@ if (chatToggleBtn && chatWindow && chatInputForm && chatInput && chatMessages) {
     return typing;
   }
 
-  // ----- 回答ロジック（段階2・3で差し替え予定のスタブ） -----
+  // ----- ナレッジ読み込み（Google SheetsのCSVを取得してキャッシュ） -----
+  let knowledgeRows = null;
+  let knowledgeLoadPromise = null;
+
+  function loadKnowledge() {
+    if (knowledgeRows) return Promise.resolve(knowledgeRows);
+    if (knowledgeLoadPromise) return knowledgeLoadPromise;
+
+    knowledgeLoadPromise = fetch(SHEET_CSV_URL)
+      .then((res) => {
+        if (!res.ok) throw new Error(`Sheet fetch failed: ${res.status}`);
+        return res.text();
+      })
+      .then((csvText) => {
+        const parsed = Papa.parse(csvText, { header: true, skipEmptyLines: true });
+        knowledgeRows = parsed.data;
+        return knowledgeRows;
+      })
+      .catch((err) => {
+        console.error('ナレッジ(Google Sheets)の読み込みに失敗しました:', err);
+        knowledgeRows = []; // 失敗時は空配列にしておき、フォールバック文言で応答する
+        return knowledgeRows;
+      });
+
+    return knowledgeLoadPromise;
+  }
+
+  // ----- キーワード一致ロジック -----
+  // rows: [{keyword: '料金|値段|価格', answer: '...'}, ..., {keyword: '', answer: 'デフォルト回答'}]
+  function findAnswer(userInput, rows) {
+    for (const row of rows) {
+      if (!row.keyword) continue; // keyword空欄の行（デフォルト行）はここではスキップ
+      const keywords = row.keyword.split('|').map((k) => k.trim()).filter(Boolean);
+      if (keywords.some((k) => userInput.includes(k))) {
+        return row.answer;
+      }
+    }
+    // どのキーワードにも一致しなかった場合、keyword空欄の行（デフォルト回答）を返す
+    const fallbackRow = rows.find((row) => !row.keyword);
+    return fallbackRow ? fallbackRow.answer : '担当者にお問い合わせください。';
+  }
+
+  // ----- 回答ロジック -----
   async function getBotReply(userText) {
-    // TODO(段階2): Google SheetsのCSVをfetch → キーワード一致でanswerを返す
-    // TODO(段階3): Railwayバックエンド(/chat)にuserTextとsystemPromptをPOSTし、
-    //              LLMの回答を返す（APIキーはフロントに置かない）
-    await new Promise((resolve) => setTimeout(resolve, 550));
-    return 'ご質問ありがとうございます。現在は画面表示の確認段階のため、回答ロジックは準備中です。今後、料金・営業時間・お問い合わせ方法などにお答えできるようになります。';
+    const rows = await loadKnowledge();
+    // 「考えている感」を出すための短い間（体感速度の調整。必須ではない）
+    await new Promise((resolve) => setTimeout(resolve, 350));
+
+    if (!rows || rows.length === 0) {
+      return 'すみません、只今回答データの取得に失敗しました。時間をおいて再度お試しください。';
+    }
+    return findAnswer(userText, rows);
   }
 
   // ----- 送信処理 -----

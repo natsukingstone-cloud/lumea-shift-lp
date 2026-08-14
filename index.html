@@ -751,10 +751,10 @@
 
   <!-- ========== CHATBOT WIDGET ========== -->
   <!--
-    課題: ナレッジベース連携チャットボット（段階1: UI実装）
-    現時点ではUIと開閉アニメーションのみ。回答ロジックはmain.js内の
-    getBotReply() にスタブを置いており、段階2でGoogle Sheets(キーワード一致)、
-    段階3でLLM API(Railway経由)に差し替える想定。
+    課題: ナレッジベース連携チャットボット
+    段階1: UI・開閉アニメーション実装
+    段階2(現在): Google SheetsのCSVをfetchし、キーワード一致で回答するロジックをmain.js内に実装
+    段階3: main.js内のgetBotReply()を、Railway経由のLLM API呼び出しに差し替える想定
   -->
   <button
     class="chat-toggle-btn"
@@ -808,6 +808,8 @@
     </form>
   </div>
 
+  <!-- 段階2: Google SheetsのCSVをパースするために使用 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
   <script src="js/main.js"></script>
   <script>
     // ヒーロー動画スライドの切り替えに合わせてキャッチコピーを変更
