@@ -310,18 +310,29 @@ if (agreeCheckbox) {
 }
 
 // =========================================
-// 10. チャットウィジェット（課題 段階2: Google Sheets連携）
+// 10. チャットウィジェット（課題 段階3: Google Sheets + DeepSeek API連携）
 //
-//   Google Sheets（keyword, answer の2列）をCSVとしてfetchし、
-//   PapaParseでパースしたうえで、ユーザーの入力文字列とkeywordを
-//   part-match（部分一致）させて対応するanswerを返す、ルールベースのロジックです。
-//   LLM APIへの接続はまだ行いません（段階3でgetBotReply()の中身を
-//   Railwayバックエンドへのfetchに差し替える予定）。
+//   Google Sheets（category, question, answer, priority の4列）をCSVとしてfetchし、
+//   PapaParseでパースした内容をシステムプロンプトに埋め込んで、
+//   Railwayにデプロイしたバックエンド（/chat）へPOSTする。
+//   バックエンドがDeepSeek APIを呼び出して回答を生成し、その結果を画面に表示する。
+//   APIキーはバックエンド側(process.env)にのみ存在し、フロントには一切露出しない。
+//
+//   ハルシネーション対策:
+//     ・システムプロンプトで「ナレッジに書かれている内容のみを根拠に回答すること」
+//       「ナレッジに書かれていない質問には『わかりかねます。担当者にお問い合わせ
+//       ください。』とだけ答え、推測で答えないこと」を明示的に指示している。
+//     ・Markdown記法（**太字**など）を使わず、プレーンテキストで答えるよう指示している
+//       （このチャットUIはプレーンテキストしか表示しないため）。
+//     ・temperatureを低め(0.3)に設定（バックエンド側）し、回答のブレを抑えている。
 // =========================================
 
-// Google Sheets「LUMEA SHIFT チャットボット用ナレッジ（段階2）」を
-// ウェブに公開(CSV形式)して発行されたURL
-const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT8FO6c0QFvcFODhSEMpSK2d6b5C7pnalTcphpz4szc3y4K94v5bJ7WQK0CMgDAYh6ab93rscR6uAe_/pub?output=csv';
+// Railwayにデプロイしたバックエンドの /chat エンドポイント
+const CHAT_API_URL = 'https://lumea-shift-backend-production.up.railway.app/chat';
+
+// Google Sheets「LUMEA SHIFT チャットボット用ナレッジ（段階3）」を
+// ウェブに公開(CSV形式)して発行されたURL（列: category, question, answer, priority）
+const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTyCNjI8C_7Q1052MJHljXD9hUx6RH-7WWXb4xvelC9lAHWIZBGTkcNvgSD8Qkn1Ta7k38av76HkEl2/pub?output=csv';
 
 const chatToggleBtn = document.getElementById('chatToggleBtn');
 const chatWindow = document.getElementById('chatWindow');
@@ -420,31 +431,79 @@ if (chatToggleBtn && chatWindow && chatInputForm && chatInput && chatMessages) {
     return knowledgeLoadPromise;
   }
 
-  // ----- キーワード一致ロジック -----
-  // rows: [{keyword: '料金|値段|価格', answer: '...'}, ..., {keyword: '', answer: 'デフォルト回答'}]
-  function findAnswer(userInput, rows) {
-    for (const row of rows) {
-      if (!row.keyword) continue; // keyword空欄の行（デフォルト行）はここではスキップ
-      const keywords = row.keyword.split('|').map((k) => k.trim()).filter(Boolean);
-      if (keywords.some((k) => userInput.includes(k))) {
-        return row.answer;
-      }
-    }
-    // どのキーワードにも一致しなかった場合、keyword空欄の行（デフォルト回答）を返す
-    const fallbackRow = rows.find((row) => !row.keyword);
-    return fallbackRow ? fallbackRow.answer : '担当者にお問い合わせください。';
+  // ----- システムプロンプト構築 -----
+  // rows: [{category, question, answer, priority}, ...]
+  // ナレッジの内容をそのままプロンプトに埋め込み、LLMに「このナレッジだけを根拠に
+  // 答える」よう指示する（ハルシネーション対策の中心部分）。
+  let cachedSystemPrompt = null;
+  let cachedForRows = null;
+
+  function buildSystemPrompt(rows) {
+    if (cachedSystemPrompt && cachedForRows === rows) return cachedSystemPrompt;
+
+    // priorityが小さいほど優先度が高い想定で並び替え（未設定は最後）
+    const sorted = [...rows].sort((a, b) => {
+      const pa = Number(a.priority);
+      const pb = Number(b.priority);
+      const na = Number.isFinite(pa) ? pa : Infinity;
+      const nb = Number.isFinite(pb) ? pb : Infinity;
+      return na - nb;
+    });
+
+    const knowledgeText = sorted
+      .filter((row) => row.question && row.answer)
+      .map((row, i) => {
+        const category = row.category ? `[${row.category}] ` : '';
+        return `${i + 1}. ${category}Q: ${row.question}\n   A: ${row.answer}`;
+      })
+      .join('\n');
+
+    cachedSystemPrompt = [
+      'あなたはスキンケアブランド「LUMEA SHIFT」の公式チャットボットです。',
+      '以下の「ナレッジ」に書かれている内容だけを根拠にして、ユーザーの質問に答えてください。',
+      '',
+      '【ナレッジ】',
+      knowledgeText || '（ナレッジが空です）',
+      '',
+      '【回答のルール】',
+      '・ナレッジに書かれていない内容については、絶対に推測や一般論で答えないこと。',
+      '・ナレッジで答えられない質問には「わかりかねます。お手数ですが担当者までお問い合わせください。」とだけ答えること。',
+      '・**太字**や#見出しなどのMarkdown記法は一切使わず、プレーンテキストのみで、簡潔（2〜3文程度）に答えること。',
+      '・丁寧で親しみやすい接客口調で答えること。',
+    ].join('\n');
+    cachedForRows = rows;
+
+    return cachedSystemPrompt;
   }
 
-  // ----- 回答ロジック -----
+  // ----- 回答ロジック（Railwayバックエンド経由でDeepSeek APIを呼び出す） -----
   async function getBotReply(userText) {
     const rows = await loadKnowledge();
-    // 「考えている感」を出すための短い間（体感速度の調整。必須ではない）
-    await new Promise((resolve) => setTimeout(resolve, 350));
 
     if (!rows || rows.length === 0) {
       return 'すみません、只今回答データの取得に失敗しました。時間をおいて再度お試しください。';
     }
-    return findAnswer(userText, rows);
+
+    const systemPrompt = buildSystemPrompt(rows);
+
+    try {
+      const res = await fetch(CHAT_API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userInput: userText, systemPrompt }),
+      });
+
+      if (!res.ok) {
+        console.error('バックエンドAPIエラー:', res.status, await res.text());
+        return 'すみません、只今回答の生成に失敗しました。時間をおいて再度お試しください。';
+      }
+
+      const data = await res.json();
+      return data.answer || 'すみません、うまく回答を取得できませんでした。';
+    } catch (err) {
+      console.error('チャットAPI通信エラー:', err);
+      return 'すみません、通信エラーが発生しました。ネットワーク環境をご確認のうえ、再度お試しください。';
+    }
   }
 
   // ----- 送信処理 -----
